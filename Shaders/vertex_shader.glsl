@@ -1,7 +1,8 @@
 #version 330
 
-uniform mat4 ModelViewProjection;
-uniform mat4 Model;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 in vec3 in_position;
 in vec3 in_normal;
@@ -11,7 +12,7 @@ out vec2 uv;
 out vec3 normal;
 
 void main() {
-    gl_Position = ModelViewProjection * vec4(in_position, 1.0);
+    gl_Position = projection * view * model * vec4(in_position, 1.0);
     uv = in_texcoord_0;
-    normal = mat3(Model) * in_normal;
+    normal = mat3(model) * in_normal;
 }
