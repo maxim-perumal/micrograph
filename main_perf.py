@@ -39,41 +39,9 @@ class MainWindow(WindowConfig):
     aspect_ratio = window_size[0] / window_size[1]
     projection = Matrix44.perspective_projection(75, aspect_ratio, 1, 100, dtype='f4')
 
-    vertex_shader_source = """
-    #version 330
-    uniform mat4 ModelViewProjection;
-    uniform mat4 Model;
-    in vec3 in_position;
-    in vec3 in_normal;
-    in vec2 in_texcoord_0;
-    out vec2 uv;
-    out vec3 normal;
-    void main() {
-        gl_Position = ModelViewProjection * vec4(in_position, 1.0);
-        uv = in_texcoord_0;
-        normal = mat3(Model) * in_normal;
-    }
-    """
-
-    fragment_shader_source = """
-    #version 330
-    uniform vec3 Color;
-    in vec2 uv;
-    in vec3 normal;
-    out vec4 fragColor;
-    void main() {
-        vec3 ambientLight = vec3(0.5, 0.5, 0.5);
-        vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-        float l = dot(normalize(normal), lightDir);
-        vec3 diffuse = max(l, 0.0) * Color;
-        vec3 ambient = ambientLight * Color;
-        fragColor = vec4(diffuse + ambient, 1.0);
-    }
-    """
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.prog = self.ctx.program(vertex_shader=self.vertex_shader_source, fragment_shader=self.fragment_shader_source)
+        self.prog = self.ctx.program(vertex_shader='Shader/vertex_shader.glsl', fragment_shader='Shader/fragment_shader.glsl')
         self.geometry = geometry.cube(size=(2, 2, 2))
         self.setup()
 
