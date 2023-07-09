@@ -18,7 +18,7 @@ class MainWindow(micrograph.SimWindow):
 if __name__ == '__main__':
     args = moderngl_window.parse_args()
     if args.profile:
-        cProfile.runctx("micrograph.run_main_window()", globals(), locals(), "output.pstats")
+        cProfile.runctx("micrograph.run_window(MainWindow)", globals(), locals(), "output.pstats")
         print("\033[92mProfiling done. Run \033[93m'snakeviz output.pstats'\033[92m to visualize the results.\033[0m")
     else:
         micrograph.run_window(MainWindow)
