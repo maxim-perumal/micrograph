@@ -1,43 +1,55 @@
+import struct
 import moderngl
 import numpy as np
 from pyrr import Matrix44
 from moderngl_window import geometry
 from moderngl_window import WindowConfig
+from moderngl_window.opengl.vao import VAO
 import cProfile
+import pstats
 import moderngl_window
 import argparse
+import os
+import time as tm
 
 class SimObject:
-    def __init__(self, size, color, position, geometry):
+    def __init__(self, size, color, position):
         self.size = size
         self.color = color
         self.position = position
-        self.rotation = Matrix44.identity(dtype='f4')
-        self.geometry = geometry
-        self.model = Matrix44.identity(dtype='f4')
+        self.rotation = Matrix44.identity()
 
     def transform(self, transformation):
         self.rotation = transformation
 
-    def update(self):
-        self.model = self.rotation * Matrix44.from_scale(self.size, dtype='f4')
+    def render(self, prog, window):
+        pass
+
+class Cube(SimObject):
+    def __init__(self, size, color, position):
+        super().__init__(size, color, position)
+        self.geometry = geometry.cube(size=self.size)
 
     def render(self, prog, window):
-        model = self.model
-        translation = Matrix44.from_translation(self.position, dtype='f4')
+        model = self.rotation * Matrix44.from_scale((1, 1, 1))
+        translation = Matrix44.from_translation(self.position)
+
         prog['Model'].write(model.astype('float32').tobytes())
         modelview = translation * model
-        projection = window.projection
+        projection = Matrix44.perspective_projection(75, window.aspect_ratio, 1, 100)
+
         matrix44 = projection * modelview
-        prog['ModelViewProjection'].write(matrix44.astype('float32').tobytes())
+        flattened_matrix44 = matrix44.flatten().tolist()
+
+        window.scale.value = flattened_matrix44
         prog['Color'].value = self.color
+
         self.geometry.render(prog)
 
-class MainWindow(WindowConfig):
+class SimWindow(WindowConfig):
     title = "3D Cube"
     window_size = (1280, 720)
     aspect_ratio = window_size[0] / window_size[1]
-    projection = Matrix44.perspective_projection(75, aspect_ratio, 1, 100, dtype='f4')
 
     # Load in the shader source code
     file = open("shaders/vertex_shader.glsl")
@@ -48,34 +60,21 @@ class MainWindow(WindowConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prog = self.ctx.program(vertex_shader=self.vertex_shader_source, fragment_shader=self.fragment_shader_source)
-        self.geometry = geometry.cube(size=(2, 2, 2))
+        self.scale = self.prog['ModelViewProjection']
         self.setup()
 
     def setup(self):
-        self.objects = [
-            SimObject((2, 2, 2), (1.0, 0.4, 0.0), (-4.0, 0.0, -5.0), self.geometry),
-            SimObject((2, 2, 2), (0.0, 0.4, 1.0), (4.0, 0.0, -5.0), self.geometry),
-            SimObject((2, 2, 2), (0.0, 0.4, 1.0), (0.0, 0.0, -5.0), self.geometry)
-        ]
+        pass
 
     def update(self, time):
-        rotation1 = Matrix44.from_eulers((time * 1, time * 1, time * 1), dtype='f4')
-        rotation2 = Matrix44.from_eulers((time * 0.5, time * 1, time * 1), dtype='f4')
-
-        self.objects[0].transform(rotation1)
-        self.objects[0].update()
-
-        self.objects[1].transform(rotation2)
-        self.objects[1].update()
-
-        self.objects[2].transform(rotation1)
-        self.objects[2].update()
+        pass
 
     def render(self, time: float, frame_time: float):
         self.ctx.clear(0.9, 0.9, 0.9)
         self.ctx.enable(moderngl.DEPTH_TEST)
+
         self.update(time)
-        for obj in self.objects:
+        for obj in self.objects.values():
             obj.render(self.prog, self)
 
     def resize(self, width: int, height: int):
@@ -85,21 +84,15 @@ class MainWindow(WindowConfig):
         if self.wnd.keys.ESCAPE == key:
             self.wnd.close()
 
-def run_main_window():
-    moderngl_window.run_window_config(MainWindow)
+def run_window(window):
+    moderngl_window.run_window_config(window)
 
+# Create new argument parser
 def new_parse_args(args=None, parser=None):
     if parser is None:
         parser = moderngl_window.create_parser()
     parser.add_argument('--profile', action='store_true', help='Enable the profiler')
     return parser.parse_args(args=args)
 
+# Replace moderngl_window's argument parser with micrograph's
 moderngl_window.parse_args = new_parse_args
-
-if __name__ == '__main__':
-    args = moderngl_window.parse_args()
-    if args.profile:
-        cProfile.runctx("run_main_window()", globals(), locals(), "output.pstats")
-        print("\033[92mProfiling done. Run \033[93m'snakeviz output.pstats'\033[92m to visualize the results.\033[0m")
-    else:
-        run_main_window()
