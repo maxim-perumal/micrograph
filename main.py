@@ -51,37 +51,11 @@ class MainWindow(WindowConfig):
     window_size = (1280, 720)
     aspect_ratio = window_size[0] / window_size[1]
 
-    vertex_shader_source = """
-    #version 330
-    uniform mat4 ModelViewProjection;
-    uniform mat4 Model;
-    in vec3 in_position;
-    in vec3 in_normal;
-    in vec2 in_texcoord_0;
-    out vec2 uv;
-    out vec3 normal;
-    void main() {
-        gl_Position = ModelViewProjection * vec4(in_position, 1.0);
-        uv = in_texcoord_0;
-        normal = mat3(Model) * in_normal;
-    }
-    """
-
-    fragment_shader_source = """
-    #version 330
-    uniform vec3 Color;
-    in vec2 uv;
-    in vec3 normal;
-    out vec4 fragColor;
-    void main() {
-        vec3 ambientLight = vec3(0.5, 0.5, 0.5);
-        vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-        float l = dot(normalize(normal), lightDir);
-        vec3 diffuse = max(l, 0.0) * Color;
-        vec3 ambient = ambientLight * Color;
-        fragColor = vec4(diffuse + ambient, 1.0);
-    }
-    """
+    # Load in the shader source code
+    file = open("shaders/vertex_shader.glsl")
+    vertex_shader_source = file.read()
+    file = open("shaders/fragment_shader.glsl")
+    fragment_shader_source = file.read()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

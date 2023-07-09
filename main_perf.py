@@ -39,9 +39,15 @@ class MainWindow(WindowConfig):
     aspect_ratio = window_size[0] / window_size[1]
     projection = Matrix44.perspective_projection(75, aspect_ratio, 1, 100, dtype='f4')
 
+    # Load in the shader source code
+    file = open("shaders/vertex_shader.glsl")
+    vertex_shader_source = file.read()
+    file = open("shaders/fragment_shader.glsl")
+    fragment_shader_source = file.read()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.prog = self.ctx.program(vertex_shader='Shader/vertex_shader.glsl', fragment_shader='Shader/fragment_shader.glsl')
+        self.prog = self.ctx.program(vertex_shader=self.vertex_shader_source, fragment_shader=self.fragment_shader_source)
         self.geometry = geometry.cube(size=(2, 2, 2))
         self.setup()
 
