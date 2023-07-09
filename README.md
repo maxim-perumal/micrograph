@@ -8,7 +8,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-Micrograph requires Python 3.7 or later. You also need to install `pipenv`, a tool for managing Python virtual environments. You can install `pipenv` by running:
+Micrograph requires Python 3.11 or later. You also need to install `pipenv`, a tool for managing Python virtual environments. You can install `pipenv` by running:
 
 ```bash
 pip install pipenv
