@@ -40,7 +40,7 @@ class SimObject:
 
     def rotate_euler(self, x: float, y: float,z: float):
         rotation_matrix = Matrix44.from_eulers((x, y, z))
-        self.set_transform(rotation_matrix * self.get_transform())
+        self.set_transform(self.get_transform() * rotation_matrix)
 
     def translate_xyz(self, x: float, y: float,z: float):
         translation_matrix = Matrix44.from_translation((x, y, z))
