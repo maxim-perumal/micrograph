@@ -1,16 +1,18 @@
+import os
+import pstats
 import struct
+import cProfile
 import moderngl
+import argparse
+import time as tm
 import numpy as np
-from pyrr import Quaternion, Matrix44, Vector3
+import moderngl_window
+from typing import Tuple
+from camera import Camera, CameraMouvement
+from pyrr import Matrix44
 from moderngl_window import geometry
 from moderngl_window import WindowConfig
 from moderngl_window.opengl.vao import VAO
-import cProfile
-import pstats
-import moderngl_window
-import argparse
-import os
-import time as tm
 
 class SimObject:
     def __init__(self):
@@ -54,7 +56,7 @@ class SimObject:
         raise NotImplementedError("Subclasses should implement this method.")
 
 class Cube(SimObject):
-    def __init__(self, size, color, position):
+    def __init__(self, size: Tuple[int, int], color: Tuple[int, int, int], position: Tuple[int, int, int]):
         super().__init__()
         self.size = size
         self.color = color
@@ -62,23 +64,23 @@ class Cube(SimObject):
         self.set_translate_xyz_world(*position)
 
     def render(self, prog, window):
+        # render the model
         model = self.get_transform() * Matrix44.from_scale(self.size)
 
-        prog['Model'].write(model.astype('float32').tobytes())
-        projection = Matrix44.perspective_projection(75, window.aspect_ratio, 1, 100)
+        prog['model'].write(model.astype('float32').tobytes())
 
-        matrix44 = projection * model
-        flattened_matrix44 = matrix44.flatten().tolist()
-
-        window.scale.value = flattened_matrix44
         prog['Color'].value = self.color
 
         self.geometry.render(prog)
 
 class SimWindow(WindowConfig):
     title = "3D Cube"
+    camera = Camera()
     window_size = (1280, 720)
     aspect_ratio = window_size[0] / window_size[1]
+    lastX, lastY = window_size[0]/2, window_size[1]/2
+    firstMouse = True
+    cursor = False
 
     # Load in the shader source code
     file = open("shaders/vertex_shader.glsl")
@@ -89,30 +91,74 @@ class SimWindow(WindowConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prog = self.ctx.program(vertex_shader=self.vertex_shader_source, fragment_shader=self.fragment_shader_source)
-        self.scale = self.prog['ModelViewProjection']
         self.setup()
+        self.deltaTime = 0.0
+        self.previousTime = 0.0
 
     def setup(self):
         pass
 
-    def update(self, time):
+    def update(self, time: float):
         pass
 
+    def ProcessInput(self):
+        if self.wnd.is_key_pressed(self.wnd.keys.W):
+            self.camera.ProcessKeyboard(CameraMouvement.FORWARD, self.deltaTime)
+        if self.wnd.is_key_pressed(self.wnd.keys.S):
+            self.camera.ProcessKeyboard(CameraMouvement.BACKWARD, self.deltaTime)
+        if self.wnd.is_key_pressed(self.wnd.keys.A):
+            self.camera.ProcessKeyboard(CameraMouvement.LEFT, self.deltaTime)
+        if self.wnd.is_key_pressed(self.wnd.keys.D):
+            self.camera.ProcessKeyboard(CameraMouvement.RIGHT, self.deltaTime)
+
     def render(self, time: float, frame_time: float):
+        # Process input keyboard
+        self.ProcessInput()
+
         self.ctx.clear(0.9, 0.9, 0.9)
         self.ctx.enable(moderngl.DEPTH_TEST)
+
+        self.deltaTime = time - self.previousTime
+        self.previousTime = time
+
+        # Projection matrix
+        projection = Matrix44.perspective_projection(75, self.aspect_ratio, 1, 100)
+
+        # View matrix
+        view = self.camera.GetViewMatrix()
+
+        # Set uniform variable from shader
+        self.prog['projection'].write(projection.astype('float32').tobytes())
+        self.prog['view'].write(view.astype('float32').tobytes())
 
         self.update(time)
         for obj in self.objects.values():
             obj.render(self.prog, self)
 
-    def resize(self, width: int, height: int):
+    def resize(self, width: int, height: int) -> None:
         self.ctx.viewport = (0, 0, width, height)
+    
+    def mouse_position_event(self, x: int, y:int, dx: int, dy: int) -> None:
+        if self.firstMouse:
+            self.lastX = x
+            self.lastY = y
+            self.firstMouse = False
 
+        xoffset = self.lastX - x
+        yoffset = self.lastY - y
+
+        self.lastX = x
+        self.lastY = y
+
+        self.camera.ProcessMouseMouvement(xoffset, yoffset)
+    
+    def mouse_scroll_event(self, x_offset: float, y_offset: float) -> None:
+        pass
+    
     def key_event(self, key, action, modifiers):
         if self.wnd.keys.ESCAPE == key:
             self.wnd.close()
-
+        
 def run_window(window):
     moderngl_window.run_window_config(window)
 
