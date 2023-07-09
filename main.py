@@ -7,10 +7,12 @@ class MainWindow(micrograph.SimWindow):
         self.objects = {
             "cube1": micrograph.Cube((2, 2, 2), (1.0, 0.4, 0.0), (-4.0, 0.0, -10.0))
         }
+        self.objects["cube1"].set_rotation_euler_world(0.0, 1.57/2, 0.0)
 
     def update(self, time):
-        self.objects["cube1"].rotate_euler(0.01, 0.01, 0.01)
-        self.objects["cube1"].translate_xyz(0.01, 0, 0)
+        #self.objects["cube1"].rotate_euler(0.1, 0.0, 0.0)
+        self.objects["cube1"].rotate_euler(0.01, 0.0, 0.0)
+        #self.objects["cube1"].translate_xyz(0.01, 0, 0)
 
 if __name__ == '__main__':
     args = moderngl_window.parse_args()

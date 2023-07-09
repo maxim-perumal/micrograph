@@ -20,7 +20,15 @@ class SimObject:
         return self.transform_state
 
     def set_transform(self, transformation):
-        self.transform_state = transformation
+        self.transform_state = transformation # Extract the current translation
+
+    def get_translation(self):
+        return self.get_transform()[3, 0:3]
+
+    def set_rotation_euler_world(self, x: float, y: float,z: float):
+        rotation_matrix = Matrix44.from_eulers((x, y, z))
+        rotation_matrix[3, 0:3] = self.get_translation() # Preserve the current translation
+        self.set_transform(rotation_matrix)
 
     def rotate_euler(self, x: float, y: float,z: float):
         rotation_matrix = Matrix44.from_eulers((x, y, z))
