@@ -58,18 +58,16 @@ class Cube(SimObject):
         super().__init__()
         self.size = size
         self.color = color
-        self.position = position
         self.geometry = geometry.cube(size=self.size)
+        self.set_translate_xyz_world(*position)
 
     def render(self, prog, window):
         model = self.get_transform() * Matrix44.from_scale(self.size)
-        translation = Matrix44.from_translation(self.position)
 
         prog['Model'].write(model.astype('float32').tobytes())
-        modelview = translation * model
         projection = Matrix44.perspective_projection(75, window.aspect_ratio, 1, 100)
 
-        matrix44 = projection * modelview
+        matrix44 = projection * model
         flattened_matrix44 = matrix44.flatten().tolist()
 
         window.scale.value = flattened_matrix44
