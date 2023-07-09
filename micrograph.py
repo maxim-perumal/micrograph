@@ -1,7 +1,7 @@
 import struct
 import moderngl
 import numpy as np
-from pyrr import Matrix44
+from pyrr import Quaternion, Matrix44, Vector3
 from moderngl_window import geometry
 from moderngl_window import WindowConfig
 from moderngl_window.opengl.vao import VAO
@@ -13,25 +13,40 @@ import os
 import time as tm
 
 class SimObject:
-    def __init__(self, size, color, position):
-        self.size = size
-        self.color = color
-        self.position = position
-        self.rotation = Matrix44.identity()
+    def __init__(self):
+        self.transform_state = Matrix44.identity()
 
-    def transform(self, transformation):
-        self.rotation = transformation
+    def get_transform(self):
+        return self.transform_state
+
+    def set_transform(self, transformation):
+        self.transform_state = transformation
+
+    def rotate_euler(self, x: float, y: float,z: float):
+        rotation_matrix = Matrix44.from_eulers((x, y, z))
+        self.set_transform(rotation_matrix * self.get_transform())
+
+    def translate_xyz(self, x: float, y: float,z: float):
+        translation_matrix = Matrix44.from_translation((x, y, z))
+        self.set_transform(translation_matrix * self.get_transform())
+
+    def scale_xyz(self, x: float, y: float,z: float):
+        scale_matrix = Matrix44.from_scale((x, y, z))
+        self.set_transform(scale_matrix * self.get_transform())
 
     def render(self, prog, window):
-        pass
+        raise NotImplementedError("Subclasses should implement this method.")
 
 class Cube(SimObject):
     def __init__(self, size, color, position):
-        super().__init__(size, color, position)
+        super().__init__()
+        self.size = size
+        self.color = color
+        self.position = position
         self.geometry = geometry.cube(size=self.size)
 
     def render(self, prog, window):
-        model = self.rotation * Matrix44.from_scale((1, 1, 1))
+        model = self.get_transform() * Matrix44.from_scale(self.size)
         translation = Matrix44.from_translation(self.position)
 
         prog['Model'].write(model.astype('float32').tobytes())

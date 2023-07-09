@@ -1,24 +1,16 @@
 import micrograph
 import moderngl_window
-from pyrr import Matrix44
+from pyrr import Quaternion, Matrix44, Vector3
 
 class MainWindow(micrograph.SimWindow):
     def setup(self):
         self.objects = {
-            "cube1": micrograph.Cube((2, 2, 2), (1.0, 0.4, 0.0), (-4.0, 0.0, -5.0)),
-            "cube2": micrograph.Cube((2, 2, 2), (0.0, 0.4, 1.0), (4.0, 0.0, -5.0)),
-            "cube3": micrograph.Cube((2, 2, 2), (0.0, 0.4, 1.0), (0.0, 0.0, -5.0)),
-            "cube4": micrograph.Cube((2, 2, 2), (0.0, 0.4, 1.0), (0.0, 2.5, -5.0))
+            "cube1": micrograph.Cube((2, 2, 2), (1.0, 0.4, 0.0), (-4.0, 0.0, -10.0))
         }
 
     def update(self, time):
-        rotation1 = Matrix44.from_eulers((time * 1, time * 1, time * 1))
-        self.objects["cube1"].transform(rotation1)
-
-        rotation2 = Matrix44.from_eulers((time * 0.5, time * 4, time * 1))
-        self.objects["cube2"].transform(rotation2)
-
-        self.objects["cube3"].transform(rotation1)
+        self.objects["cube1"].rotate_euler(0.01, 0.01, 0.01)
+        self.objects["cube1"].translate_xyz(0.01, 0, 0)
 
 if __name__ == '__main__':
     args = moderngl_window.parse_args()
