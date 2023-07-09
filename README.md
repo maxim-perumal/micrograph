@@ -34,8 +34,11 @@ Once the dependencies are installed, you can run the main script by executing:
 ```bash
 pipenv run python main.py
 ```
-You can also enable profiling by passing the '--profile' argument:
+### Profiling
+There currently only is basic profiling available, you can enable it by passing the '--profile' argument:
 ```bash
 pipenv run python main.py --profile
 ```
 This will create a file named output.pstats which you can analyze with tools such as SnakeViz to visualize the profiling data.
+
+## Have fun! Thank you.
