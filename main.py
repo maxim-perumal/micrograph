@@ -1,6 +1,7 @@
 import micrograph
 import moderngl_window
 from pyrr import Quaternion, Matrix44, Vector3
+import cProfile
 
 class MainWindow(micrograph.SimWindow):
     def setup(self):
