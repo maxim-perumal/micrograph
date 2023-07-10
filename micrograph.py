@@ -8,10 +8,10 @@ import time as tm
 import numpy as np
 import moderngl_window
 from typing import Tuple
-from camera import Camera, CameraMouvement
 from pyrr import Matrix44
 from moderngl_window import geometry
 from moderngl_window import WindowConfig
+from camera import Camera, CameraMouvement
 from moderngl_window.opengl.vao import VAO
 
 class SimObject:
@@ -30,12 +30,12 @@ class SimObject:
     def get_rotation(self):
         return self.get_transform()[0:3, 0:3]
 
-    def set_rotation_euler_world(self, x: float, y: float,z: float):
+    def set_rotation_euler_world(self, x: float, y: float,z: float) -> None:
         rotation_matrix = Matrix44.from_eulers((x, y, z))
         rotation_matrix[3, 0:3] = self.get_translation() # Preserve the current translation
         self.set_transform(rotation_matrix)
 
-    def set_translate_xyz_world(self, x: float, y: float,z: float):
+    def set_translate_xyz_world(self, x: float, y: float,z: float) -> None:
         translation_matrix = Matrix44.from_translation((x, y, z))
         translation_matrix[0:3, 0:3] = self.get_rotation() # Preserve the current translation
         self.set_transform(translation_matrix)
@@ -56,7 +56,7 @@ class SimObject:
         raise NotImplementedError("Subclasses should implement this method.")
 
 class Cube(SimObject):
-    def __init__(self, size: Tuple[int, int], color: Tuple[int, int, int], position: Tuple[int, int, int]):
+    def __init__(self, size: Tuple[int, int, int], color: Tuple[int, int, int], position: Tuple[int, int, int]):
         super().__init__()
         self.size = size
         self.color = color
@@ -73,13 +73,52 @@ class Cube(SimObject):
 
         self.geometry.render(prog)
 
+class Sphere(SimObject):
+    def __init__(self, radius: int, color: Tuple[int, int, int], position: Tuple[int, int, int]):
+        super().__init__()
+        self.radius = radius
+        self.color = color
+        self.geometry = geometry.sphere(radius=radius)
+        self.set_translate_xyz_world(*position)
+
+    def render(self, prog, window):
+        # render the model
+        model = self.get_transform() * Matrix44.from_scale((self.radius, self.radius, self.radius))
+
+        prog['model'].write(model.astype('float32').tobytes())
+
+        prog['Color'].value = self.color
+
+        self.geometry.render(prog)
+
+class Quad(SimObject):
+    def __init__(self, size: Tuple[int, int, int], color: Tuple[int, int, int], position: Tuple[int, int, int]):
+        super().__init__()
+        self.size = size
+        self.color = color
+        self.geometry = geometry.quad_2d(size=self.size[:2])
+        self.set_translate_xyz_world(*position)
+
+    def render(self, prog, window):
+        # render the model
+        model = self.get_transform() * Matrix44.from_scale(self.size)
+
+        prog['model'].write(model.astype('float32').tobytes())
+
+        prog['Color'].value = self.color
+
+        self.geometry.render(prog)
+
 class SimWindow(WindowConfig):
+    # Window parameters
     title = "3D Cube"
-    camera = Camera()
     window_size = (1280, 720)
     aspect_ratio = window_size[0] / window_size[1]
-    lastX, lastY = window_size[0]/2, window_size[1]/2
-    firstMouse = True
+
+    # Camera
+    camera = Camera()
+
+    # Mouse parameters
     cursor = False
 
     # Load in the shader source code
@@ -90,6 +129,7 @@ class SimWindow(WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.wnd.mouse_exclusivity = True
         self.prog = self.ctx.program(vertex_shader=self.vertex_shader_source, fragment_shader=self.fragment_shader_source)
         self.setup()
         self.deltaTime = 0.0
@@ -139,25 +179,21 @@ class SimWindow(WindowConfig):
         self.ctx.viewport = (0, 0, width, height)
     
     def mouse_position_event(self, x: int, y:int, dx: int, dy: int) -> None:
-        if self.firstMouse:
-            self.lastX = x
-            self.lastY = y
-            self.firstMouse = False
-
-        xoffset = self.lastX - x
-        yoffset = self.lastY - y
-
-        self.lastX = x
-        self.lastY = y
-
-        self.camera.ProcessMouseMouvement(xoffset, yoffset)
+        self.camera.ProcessMouseMouvement(dx, dy)
     
     def mouse_scroll_event(self, x_offset: float, y_offset: float) -> None:
         pass
     
     def key_event(self, key, action, modifiers):
-        if self.wnd.keys.ESCAPE == key:
-            self.wnd.close()
+        keys = self.wnd.keys
+
+        if action == keys.ACTION_PRESS:
+            if key == keys.ESCAPE:
+                self.wnd.close()
+            
+            # Toggle mouse exclusivity
+            if key == keys.M:
+                self.wnd.mouse_exclusivity = not self.wnd.mouse_exclusivity
         
 def run_window(window):
     moderngl_window.run_window_config(window)

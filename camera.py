@@ -39,8 +39,8 @@ class Camera(object):
         xoffset *= self.mouse_sensitivity
         yoffset *= self.mouse_sensitivity
 
-        self.yaw -= xoffset
-        self.pitch += yoffset
+        self.yaw += xoffset
+        self.pitch -= yoffset
 
         # Constrain pitch to prevent screen flipping
         if constrainPitch:

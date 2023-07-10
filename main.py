@@ -6,7 +6,9 @@ import cProfile
 class MainWindow(micrograph.SimWindow):
     def setup(self):
         self.objects = {
-            "cube1": micrograph.Cube((2, 2, 2), (1.0, 0.4, 0.0), (0.0, 0.0, 0.0))
+            "cube1": micrograph.Cube((2, 2, 2), (1.0, 0.4, 0.0), (0.0, 0.0, 0.0)),
+            "sphere1": micrograph.Sphere(2, (0.0, 0.4, 1.0), (0.0, 0.0, 0.0)),
+            "quad1": micrograph.Quad((2, 2, 2), (1.0, 0.4, 1.0), (0.0, -5.0, 0.0)),
         }
         self.objects["cube1"].set_rotation_euler_world(0.0, 1.57/2, 0.0)
         self.objects["cube1"].set_translate_xyz_world(-4.0, 0.0, -10.0)
