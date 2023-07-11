@@ -7,6 +7,8 @@ class CameraMouvement(Enum):
     BACKWARD = 2
     LEFT = 3
     RIGHT = 4
+    UP = 5
+    DOWN = 6
 
 class Camera(object):
     def __init__(self, 
@@ -63,6 +65,10 @@ class Camera(object):
             self.camera_pos -= self.camera_right * velocity
         if direction == CameraMouvement.RIGHT:
             self.camera_pos += self.camera_right * velocity
+        if direction == CameraMouvement.UP:
+            self.camera_pos += self.camera_up * velocity
+        if direction == CameraMouvement.DOWN:
+            self.camera_pos -= self.camera_up * velocity
         
 
     def ProcessMouseScroll(self):

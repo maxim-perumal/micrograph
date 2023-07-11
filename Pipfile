@@ -8,6 +8,7 @@ moderngl-window = "*"
 numpy = "*"
 pyrr = "*"
 snakeviz = "*"
+imgui = "*"
 
 [dev-packages]
 

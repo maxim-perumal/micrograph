@@ -4,6 +4,7 @@ uniform mat4 ModelViewProjection;
 uniform vec3 Color;
 
 in vec2 uv;
+in vec3 pos;
 in vec3 normal;
 
 out vec4 fragColor;
@@ -13,7 +14,7 @@ void main() {
     vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
     float shininess = 16.0;
 
-    vec3 P = vec3(vec3(0.0, 0.0, -1.0));    // Position vector
+    vec3 P = pos;    // Position vector
     vec3 N = normalize(normal);             // Normal vector
     vec3 V = normalize(-P);                 // View direction
     vec3 L = normalize(lightDir - P);       // Light direction
